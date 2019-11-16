@@ -1,0 +1,3 @@
+[submodule "libfintx"]
+	path = libfintx
+	url = https://github.com/mode777/libfintx.git
