@@ -24,12 +24,12 @@ namespace Finances.Mvc.Services
             var context = await contextProvider.GetContextAsync(connectionId);
 
             context.Transaction = new TransactionsCamt(context, false, camtVersion.camt052, start, end);
-            context.Transaction.OnComplete += (s,a) => TransactionComplete(connectionId, a);
+            //context.Transaction.OnComplete += (s,a) => SyncComplete(connectionId, a);
 
             return await CompleteTransactionAsync(connectionId, null);
         }
 
-        private void TransactionComplete(int connectionId, HBCIDialogResult e)
+        private void SyncComplete(int connectionId, HBCIDialogResult e)
         {
             if(e is HBCIDialogResult<List<TStatement>> statements)
             {
@@ -55,10 +55,11 @@ namespace Finances.Mvc.Services
         public async Task<HBCIDialogResult> CompleteTransactionAsync(int connectionId, string tan = null)
         {
             var context = await contextProvider.GetContextAsync(connectionId);
-            
-            var result = await context.Transaction.ExecuteAsync();
-            if (result.IsSuccess && !result.IsSCARequired)
+                        
+            var result = await context.Transaction.ExecuteAsync(tan);
+            if ((result.IsSuccess && !result.IsSCARequired) || result.HasError)
             {
+                SyncComplete(connectionId, result);
                 context.Transaction = null;
             }
 
