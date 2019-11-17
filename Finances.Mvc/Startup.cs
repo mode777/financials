@@ -14,6 +14,7 @@ using Finances.Mvc.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
+using Finances.Mvc.Services;
 
 namespace Finances.Mvc
 {
@@ -44,10 +45,11 @@ namespace Finances.Mvc
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddMemoryCache();
-
-            services.AddSingleton(x => new HttpClient());
-
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+                       
+            services.AddSingleton(x => new HttpClient());
+            services.AddSingleton<FinTsContextProvider>();
+            services.AddTransient<BankingServices>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

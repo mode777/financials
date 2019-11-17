@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Finances.Mvc.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Finances.Mvc.Controllers
 {
+    [Authorize]
     public class ConnectionDataController : Controller
     {
         private readonly ApplicationDbContext _context;

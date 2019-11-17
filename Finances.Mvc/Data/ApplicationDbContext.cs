@@ -14,5 +14,6 @@ namespace Finances.Mvc.Data
         }
 
         public DbSet<ConnectionData> ConnectionData { get; set; }
+        public DbSet<AccountItem> AccountItems { get; set; }
     }
 }
