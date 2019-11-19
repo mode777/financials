@@ -1,89 +1,43 @@
 ﻿@model IEnumerable<Finances.Mvc.Data.AccountItem>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Konto";
 }
 
-<h1>Index</h1>
+<h1>Konto</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<table id="example" class="table table-striped table-bordered" style="width:100%">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.AccountCode)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Amount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BankCode)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.InputDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MandateId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PartnerName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Type)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ValueDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Connection)
-            </th>
-            <th></th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Amount</th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountCode)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Amount)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BankCode)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.InputDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MandateId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PartnerName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Type)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ValueDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Connection.AccountId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
 </table>
+
+@section styles {
+    <link rel="stylesheet" type="text/css" href="~/css/datatables.min.css" />
+    <style>
+        td {
+            font-size: small;
+        }
+    </style>
+}
+
+@section scripts {
+    <script type="text/javascript" src="~/js/datatables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#example').DataTable({
+                "ajax": {
+                    "url": "@Url.Action("Data")",
+                    "dataSrc": ""
+                }
+            } );
+        } );
+    </script>
+}
+

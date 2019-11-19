@@ -6,16 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Finances.Mvc.Data;
+using Microsoft.AspNetCore.Identity;
 
 namespace Finances.Mvc.Controllers
 {
     public class AccountItemsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> users;
 
-        public AccountItemsController(ApplicationDbContext context)
+        public AccountItemsController(ApplicationDbContext context, UserManager<IdentityUser> users)
         {
             _context = context;
+            this.users = users;
         }
 
         // GET: AccountItems
@@ -23,6 +26,27 @@ namespace Finances.Mvc.Controllers
         {
             var applicationDbContext = _context.AccountItems.Include(a => a.Connection);
             return View(await applicationDbContext.ToListAsync());
+        }
+
+        [HttpGet("data")]
+        public async Task<IActionResult> Data()
+        {
+            var userId = users.GetUserId(User);
+
+            var data = await _context.AccountItems
+                .Where(x => x.Connection.Owner.Id == userId)
+                .Where(x => x.Amount != 0)
+                .OrderByDescending(x => x.InputDate)
+                .Select(x => new string[]
+                {
+                    x.PartnerName,
+                    x.Description,
+                    x.InputDate.Value.ToString("yyyy-MM-dd"),
+                    x.Type,
+                    x.Amount.ToString()
+                }).ToListAsync();
+
+            return Json(data);
         }
 
         // GET: AccountItems/Details/5
