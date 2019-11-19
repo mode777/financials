@@ -50,6 +50,7 @@ namespace Finances.Mvc
             services.AddSingleton(x => new HttpClient());
             services.AddSingleton<FinTsContextProvider>();
             services.AddTransient<BankingServices>();
+            services.AddTransient<ChartServices>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

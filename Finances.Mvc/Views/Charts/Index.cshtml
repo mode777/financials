@@ -1,0 +1,31 @@
+﻿
+@{
+    ViewData["Title"] = "Charts";
+}
+
+<h1>Index</h1>
+<canvas id="myChart" width="400" height="400"></canvas>
+
+@section scripts {
+    <script src="~/js/Chart.bundle.min.js"></script>
+    <script>
+        $(document).ready(async () => {
+            const response = await fetch('@Url.Action("GroupByType")', { credentials: 'include' });
+            const data = await response.json();
+            var myDoughnutChart = new Chart('myChart', {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: data.data
+                    }],
+                    // These labels appear in the legend and in the tooltips when hovering different arcs
+                    labels: data.labels
+                },
+            });
+        });
+    </script>
+}
+
+@section styles {
+    <link rel="stylesheet" type="text/css" href="~/css/Chart.min.css">
+}

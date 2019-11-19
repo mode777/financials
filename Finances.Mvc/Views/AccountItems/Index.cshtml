@@ -24,6 +24,10 @@
         td {
             font-size: small;
         }
+        .column-amount {
+            text-align: right;
+            font-weight: bold;
+        }
     </style>
 }
 
@@ -32,10 +36,18 @@
     <script>
         $(document).ready(function() {
             $('#example').DataTable({
-                "ajax": {
-                    "url": "@Url.Action("Data")",
-                    "dataSrc": ""
-                }
+                ajax: {
+                    url: "@Url.Action("Data")",
+                    dataSrc: ""
+                },
+                order: [],
+                columns: [
+                    null,
+                    null,
+                    { width: "50px" },
+                    null,
+                    { className: "column-amount" }
+                ]
             } );
         } );
     </script>
