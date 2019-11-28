@@ -6,6 +6,14 @@
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Data\Sql\view.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\Sql\view.sql" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />

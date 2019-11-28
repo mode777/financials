@@ -6,15 +6,25 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Finances.Mvc.Models;
 using Microsoft.AspNetCore.Authorization;
+using Finances.Mvc.Services;
 
 namespace Finances.Mvc.Controllers
 {
     [Authorize]
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly AccountServices accounts;
+
+        public HomeController(AccountServices accounts)
         {
-            return View();
+            this.accounts = accounts;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var cat = await accounts.GetCategories();
+
+            return View(cat);
         }
 
         public IActionResult Privacy()

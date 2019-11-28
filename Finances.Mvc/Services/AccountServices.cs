@@ -19,9 +19,10 @@ namespace Finances.Mvc.Services
             this.db = db.Database.GetDbConnection();
         }
 
-        public string[] GetCategories()
+        public async Task<IEnumerable<string>> GetCategories()
         {
-            db.QueryAsync<string[]>("select name from AccountItems");
+            var sql = await ResourceHelpers.GetString(typeof(AccountServices).Assembly, "view.sql");
+            return await db.QueryAsync<string>(sql);
         }
 
 
