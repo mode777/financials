@@ -23,11 +23,28 @@ namespace Finances.Mvc.Services
         {
             var context = await contextProvider.GetContextAsync(connectionId);
 
-            context.Transaction = new TransactionsCamt(context, false, camtVersion.camt052, start, end);
-            //context.Transaction.OnComplete += (s,a) => SyncComplete(connectionId, a);
+            var init = new MyTransactionInit(context, false);
+            var camt = new MyTransactionCamt(context, camtVersion.camt052, start, end);
+            var comp = new CompositeTransaction(init, camt);
+
+            context.Transaction = comp;
+         
+            return await CompleteTransactionAsync(connectionId, null);
+        }
+
+        public async Task<HBCIDialogResult> SyncBalanceAsync(int connectionId)
+        {
+            var context = await contextProvider.GetContextAsync(connectionId);
+
+            var init = new MyTransactionInit(context, false);
+            var camt = new MyTransactionBalance(context);
+            var comp = new CompositeTransaction(init, camt);
+
+            context.Transaction = comp;
 
             return await CompleteTransactionAsync(connectionId, null);
         }
+
 
         private void SyncComplete(int connectionId, HBCIDialogResult e)
         {
@@ -50,14 +67,20 @@ namespace Finances.Mvc.Services
                     db.SaveChanges();
                 }
             }
+            else if(e is HBCIDialogResult<AccountBalance> balance)
+            {
+
+            }
         }
 
         public async Task<HBCIDialogResult> CompleteTransactionAsync(int connectionId, string tan = null)
         {
             var context = await contextProvider.GetContextAsync(connectionId);
                         
-            var result = await context.Transaction.ExecuteAsync(tan);
-            if ((result.IsSuccess && !result.IsSCARequired) || result.HasError)
+            await context.Transaction.ContinueAsync(tan);
+            var result = context.Transaction.Result;
+
+            if (context.Transaction.State == TransactionState.Fininshed)
             {
                 SyncComplete(connectionId, result);
                 context.Transaction = null;

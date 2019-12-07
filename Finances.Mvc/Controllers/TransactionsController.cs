@@ -42,6 +42,16 @@ namespace Finances.Mvc.Controllers
             return new TransactionResult(id, result);
         }
 
+        [HttpPost("balance")]
+        public async Task<TransactionResult> Balance()
+        {
+            var id = await GetConnectionId();
+
+            var result = await banking.SyncBalanceAsync(id);
+
+            return new TransactionResult(id, result);
+        }
+
         public class CompleteParams
         {
             public int ConnectionId { get; set; }

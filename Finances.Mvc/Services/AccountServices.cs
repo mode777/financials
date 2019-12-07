@@ -21,8 +21,10 @@ namespace Finances.Mvc.Services
 
         public async Task<IEnumerable<string>> GetCategories()
         {
-            var sql = await ResourceHelpers.GetString(typeof(AccountServices).Assembly, "view.sql");
-            return await db.QueryAsync<string>(sql);
+            //var sql = await ResourceHelpers.GetString(typeof(AccountServices).Assembly, "view.sql");
+            //return await db.QueryAsync<string>(sql);
+
+            return Enumerable.Empty<string>();
         }
 
 

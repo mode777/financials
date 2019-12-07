@@ -5,35 +5,46 @@
 
 <h1>Index</h1>
 <button id="btn-sync" class="btn btn-primary">Sync</button>
+<button id="btn-balance" class="btn btn-primary">Balance</button>
 
 @section scripts {
 
-<script>
-    const btn = $('#btn-sync'); 
-    btn.click(async e => {
-        btn.attr('disabled', true);
-        const response = await fetch("@Url.Action("Sync", "Transactions")", {
-            method: "POST",
-            credentials: "include"
-        });
-        let transaction = await response.json();
-        while (transaction.status === 'tan_required') {
-            const tan = prompt("Please enter TAN:");
-            const response = await fetch("@Url.Action("Complete", "Transactions")", {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    connectionId: transaction.connectionId,
-                    tan: tan
+    <script>
+    const URL_SYNC = "@Url.Action("Sync", "Transactions")";
+    const URL_BALANCE = "@Url.Action("Balance", "Transactions")";
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        bindTransaction($('#btn-sync'), URL_SYNC);
+        bindTransaction($('#btn-balance'), URL_BALANCE);
+    });
+
+    async function bindTransaction(btn, url) {
+        btn.click(async e => {
+            btn.attr('disabled', true);
+            const response = await fetch(url, {
+                method: "POST",
+                credentials: "include"
+            });
+            let transaction = await response.json();
+            while (transaction.status === 'tan_required') {
+                const tan = prompt("Please enter TAN:");
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        connectionId: transaction.connectionId,
+                        tan: tan
+                    })
                 })
-            })
-            transaction = await response.json()
-        }
-        console.log(status);
-        btn.attr('disabled', false);
-    })
-</script>
+                transaction = await response.json()
+            }
+            console.log(status);
+            btn.attr('disabled', false);
+        })
+    }
+
+    </script>
 }
