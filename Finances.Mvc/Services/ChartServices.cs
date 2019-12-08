@@ -30,5 +30,38 @@ namespace Finances.Mvc.Services
 
             return tuples;
         }
+
+        public async Task<object> BalanceOverTime(int connectionId)
+        {
+            var results = new List<(DateTime, int)>();
+
+            var data = await db.ConnectionData.FindAsync(connectionId);
+            var amount = data.Balance ?? 0;
+            var date = DateTime.Today.AddDays(1);
+
+            var query = db.AccountItems
+                .Where(x => x.Connection.Id == connectionId)
+                .GroupBy(x => x.ValueDate.Value.Date)
+                .OrderByDescending(x => x.Key)
+                .Select(x => new { x.Key, Sum = x.Sum(y => y.Amount) });
+
+            results.Add((date, amount));
+
+            foreach (var item in query)
+            {
+                while(item.Key < date)
+                {
+                    results.Add((date, amount));
+                    date = date.AddDays(-1);
+                }
+
+                amount -= (int)(item.Sum * 10);
+                results.Add((date, amount));
+                date = date.AddDays(-1);
+            }
+
+            return results;
+        }
+
     }
 }

@@ -20,32 +20,28 @@ namespace Finances.Mvc.Services
             this.dbContext = dbContext;
         }
 
-        public async Task<HBCIDialogResult> SyncAccountAsync(int connectionId, DateTime start, DateTime end)
+        public async Task UpdateAsync(int connectionId)
         {
+            var lastSync = await GetLastSync(connectionId);
+
             var context = await contextProvider.GetContextAsync(connectionId);
 
             var init = new MyTransactionInit(context, false);
-            var camt = new MyTransactionCamt(context, camtVersion.camt052, start, end);
-            var comp = new CompositeTransaction(init, camt);
+            var balance = new MyTransactionBalance(context);
+            var camt = new MyTransactionCamt(context, camtVersion.camt052, lastSync, DateTime.Now);
+            var comp = new CompositeTransaction(init, balance, camt);
 
             context.Transaction = comp;
-         
-            return await CompleteTransactionAsync(connectionId, null);
+
+            await CompleteTransactionAsync(connectionId, null);
         }
 
-        public async Task<HBCIDialogResult> SyncBalanceAsync(int connectionId)
+        private async Task<DateTime> GetLastSync(int connectionId)
         {
-            var context = await contextProvider.GetContextAsync(connectionId);
-
-            var init = new MyTransactionInit(context, false);
-            var camt = new MyTransactionBalance(context);
-            var comp = new CompositeTransaction(init, camt);
-
-            context.Transaction = comp;
-
-            return await CompleteTransactionAsync(connectionId, null);
+            var data = await dbContext.ConnectionData.FindAsync(connectionId);
+            var lastSync = data.LastSync?.AddDays(-1) ?? new DateTime(DateTime.Today.Year, 1, 1);
+            return lastSync;
         }
-
 
         private async Task TransactionComplete(int connectionId, HBCIDialogResult e)
         {
@@ -64,8 +60,8 @@ namespace Finances.Mvc.Services
         private async Task CompleteBalance(int connectionId, HBCIDialogResult<AccountBalance> balance)
         {
             var data = await dbContext.ConnectionData.FindAsync(connectionId);
-            data.Balance = (int)balance.Data.Balance;
             data.LastSync = DateTime.Now;
+            data.Balance = (int)balance.Data.Balance;
             await dbContext.SaveChangesAsync();
         }
 
@@ -90,20 +86,21 @@ namespace Finances.Mvc.Services
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task<HBCIDialogResult> CompleteTransactionAsync(int connectionId, string tan = null)
+        public async Task CompleteTransactionAsync(int connectionId, string tan = null)
         {
             var context = await contextProvider.GetContextAsync(connectionId);
                         
             await context.Transaction.ContinueAsync(tan);
-            var result = context.Transaction.Result;
+
+            while(context.Transaction.TryDequeue(out var result))
+            {
+                await TransactionComplete(connectionId, result);
+            }
 
             if (context.Transaction.State == TransactionState.Fininshed)
             {
-                await TransactionComplete(connectionId, result);
                 context.Transaction = null;
             }
-
-            return result;
         }
     }
 }

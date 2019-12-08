@@ -25,31 +25,15 @@ namespace Finances.Mvc.Controllers
             this.db = db;
             this.users = users;
         }
-
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        [HttpPost("sync")]
+                
+        [HttpPost]
         public async Task<TransactionResult> Sync()
         {
             var id = await GetConnectionId();
 
-            var result = await banking.SyncAccountAsync(id, new DateTime(2019, 1, 1), DateTime.Today);
+            await banking.UpdateAsync(id);
 
-            return new TransactionResult(id, result);
-        }
-
-        [HttpPost("balance")]
-        public async Task<TransactionResult> Balance()
-        {
-            var id = await GetConnectionId();
-
-            var result = await banking.SyncBalanceAsync(id);
-
-            return new TransactionResult(id, result);
+            return new TransactionResult(id, null);
         }
 
         public class CompleteParams
@@ -61,9 +45,9 @@ namespace Finances.Mvc.Controllers
         [HttpPost("complete")]
         public async Task<TransactionResult> Complete([FromBody]CompleteParams param)
         {
-            var result = await banking.CompleteTransactionAsync(param.ConnectionId, param.Tan);
+            await banking.CompleteTransactionAsync(param.ConnectionId, param.Tan);
 
-            return new TransactionResult(param.ConnectionId, result);
+            return new TransactionResult(param.ConnectionId, null);
         }
 
         private async Task<int> GetConnectionId()

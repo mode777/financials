@@ -10,6 +10,9 @@ namespace Finances.Mvc.Dtos
     {
         public TransactionResult(int connectionId, HBCIDialogResult result)
         {
+            if (result == null)
+                return;
+
             ConnectionId = connectionId;
 
             if(result.IsSuccess && !result.IsSCARequired)

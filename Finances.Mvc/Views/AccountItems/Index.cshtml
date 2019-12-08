@@ -6,6 +6,10 @@
 
 <h1>Konto</h1>
 
+<p>
+    <button id="btn-sync" class="btn btn-primary float-right">Sync</button>
+</p>
+
 <table id="example" class="table table-striped table-bordered" style="width:100%">
     <thead>
         <tr>
@@ -34,7 +38,10 @@
 @section scripts {
     <script type="text/javascript" src="~/js/datatables.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
+
+            bindTransaction($('#btn-sync'), URL_SYNC);
+
             $('#example').DataTable({
                 ajax: {
                     url: "@Url.Action("Data")",
@@ -49,7 +56,38 @@
                     { className: "column-amount" }
                 ]
             } );
-        } );
+        });
+
+        const URL_SYNC = "@Url.Action("Sync", "Transactions")";
+    
+        async function bindTransaction(btn, url) {
+            btn.click(async e => {
+                btn.attr('disabled', true);
+                const response = await fetch(url, {
+                    method: "POST",
+                    credentials: "include"
+                });
+                let transaction = await response.json();
+                while (transaction.status === 'tan_required') {
+                    const tan = prompt("Please enter TAN:");
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            connectionId: transaction.connectionId,
+                            tan: tan
+                        })
+                    })
+                    transaction = await response.json()
+                }
+                console.log(status);
+                btn.attr('disabled', false);
+            })
+        }
+
     </script>
 }
 
