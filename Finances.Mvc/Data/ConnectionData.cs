@@ -24,5 +24,7 @@ namespace Finances.Mvc.Data
         public string Pin { get; set; }
         [Required]
         public IdentityUser Owner { get; set; }
+        public DateTime? LastSync { get; set; }
+        public int? Balance { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Finances.Mvc.Data;
 using libfintx;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -11,12 +12,12 @@ namespace Finances.Mvc.Services
     public class BankingServices
     {
         private readonly FinTsContextProvider contextProvider;
-        private readonly IServiceProvider serviceProvider;
+        private readonly ApplicationDbContext dbContext;
 
-        public BankingServices(FinTsContextProvider contextProvider, IServiceProvider serviceProvider)
+        public BankingServices(FinTsContextProvider contextProvider, ApplicationDbContext dbContext)
         {
             this.contextProvider = contextProvider;
-            this.serviceProvider = serviceProvider;
+            this.dbContext = dbContext;
         }
 
         public async Task<HBCIDialogResult> SyncAccountAsync(int connectionId, DateTime start, DateTime end)
@@ -46,31 +47,47 @@ namespace Finances.Mvc.Services
         }
 
 
-        private void SyncComplete(int connectionId, HBCIDialogResult e)
+        private async Task TransactionComplete(int connectionId, HBCIDialogResult e)
         {
-            if(e is HBCIDialogResult<List<TStatement>> statements)
+            switch (e)
             {
-                var accountTransactions = statements.Data
-                    .SelectMany(x => x.transactions)
-                    .Select(x => new AccountItem(x, connectionId))
-                    .ToArray();
-                    
-                using (var scope = serviceProvider.CreateScope())
-                using (var db = scope.ServiceProvider.GetService<ApplicationDbContext>())
-                {
-                    var ids = accountTransactions.Select(x => x.Id);
-                    var present = db.AccountItems.Where(x => ids.Contains(x.Id)).Select(x => x.Id).ToArray();
-
-                    accountTransactions = accountTransactions.Where(x => !present.Contains(x.Id)).ToArray();
-
-                    db.AccountItems.AddRange(accountTransactions);
-                    db.SaveChanges();
-                }
+                case HBCIDialogResult<List<TStatement>> statements:
+                    await CompleteSync(connectionId, statements);
+                    break;
+                case HBCIDialogResult<AccountBalance> balance:
+                    await CompleteBalance(connectionId, balance);
+                    break;
             }
-            else if(e is HBCIDialogResult<AccountBalance> balance)
-            {
 
-            }
+        }
+
+        private async Task CompleteBalance(int connectionId, HBCIDialogResult<AccountBalance> balance)
+        {
+            var data = await dbContext.ConnectionData.FindAsync(connectionId);
+            data.Balance = (int)balance.Data.Balance;
+            data.LastSync = DateTime.Now;
+            await dbContext.SaveChangesAsync();
+        }
+
+        private async Task CompleteSync(int connectionId, HBCIDialogResult<List<TStatement>> statements)
+        {
+            var accountTransactions = statements.Data
+                                .SelectMany(x => x.transactions)
+                                .Select(x => new AccountItem(x, connectionId))
+                                .ToArray();
+
+            var ids = accountTransactions.Select(x => x.Id);
+            var present = await dbContext.AccountItems
+                .Where(x => ids.Contains(x.Id))
+                .Select(x => x.Id)
+                .ToArrayAsync();
+
+            accountTransactions = accountTransactions
+                .Where(x => !present.Contains(x.Id))
+                .ToArray();
+
+            dbContext.AccountItems.AddRange(accountTransactions);
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task<HBCIDialogResult> CompleteTransactionAsync(int connectionId, string tan = null)
@@ -82,7 +99,7 @@ namespace Finances.Mvc.Services
 
             if (context.Transaction.State == TransactionState.Fininshed)
             {
-                SyncComplete(connectionId, result);
+                await TransactionComplete(connectionId, result);
                 context.Transaction = null;
             }
 
