@@ -20,7 +20,7 @@ namespace Finances.Mvc.Services
             this.dbContext = dbContext;
         }
 
-        public async Task UpdateAsync(int connectionId)
+        public async Task<HBCIDialogResult> UpdateAsync(int connectionId)
         {
             var lastSync = await GetLastSync(connectionId);
 
@@ -29,11 +29,11 @@ namespace Finances.Mvc.Services
             var init = new MyTransactionInit(context, false);
             var balance = new MyTransactionBalance(context);
             var camt = new MyTransactionCamt(context, camtVersion.camt052, lastSync, DateTime.Now);
-            var comp = new CompositeTransaction(init, balance, camt);
+            var comp = new CompositeTransaction(init, camt, balance);
 
             context.Transaction = comp;
 
-            await CompleteTransactionAsync(connectionId, null);
+            return await CompleteTransactionAsync(connectionId, null);
         }
 
         private async Task<DateTime> GetLastSync(int connectionId)
@@ -86,7 +86,7 @@ namespace Finances.Mvc.Services
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task CompleteTransactionAsync(int connectionId, string tan = null)
+        public async Task<HBCIDialogResult> CompleteTransactionAsync(int connectionId, string tan = null)
         {
             var context = await contextProvider.GetContextAsync(connectionId);
                         
@@ -97,10 +97,14 @@ namespace Finances.Mvc.Services
                 await TransactionComplete(connectionId, result);
             }
 
+            var currentResult = context.Transaction.Current.Result;
+
             if (context.Transaction.State == TransactionState.Fininshed)
             {
                 context.Transaction = null;
             }
+
+            return currentResult;
         }
     }
 }

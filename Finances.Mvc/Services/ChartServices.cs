@@ -36,31 +36,36 @@ namespace Finances.Mvc.Services
             var results = new List<(DateTime, int)>();
 
             var data = await db.ConnectionData.FindAsync(connectionId);
-            var amount = data.Balance ?? 0;
+            var amount = (data.Balance ?? 0) * 10;
             var date = DateTime.Today.AddDays(1);
 
             var query = db.AccountItems
                 .Where(x => x.Connection.Id == connectionId)
-                .GroupBy(x => x.ValueDate.Value.Date)
+                .GroupBy(x => x.InputDate.Value.Year +"-"+ x.InputDate.Value.Month)
                 .OrderByDescending(x => x.Key)
                 .Select(x => new { x.Key, Sum = x.Sum(y => y.Amount) });
 
-            results.Add((date, amount));
-
             foreach (var item in query)
             {
-                while(item.Key < date)
-                {
-                    results.Add((date, amount));
-                    date = date.AddDays(-1);
-                }
+                //while(DateTime.Parse(item.Key) < date)
+                //{
+                //    results.Add((date, amount));
+                //    date = date.AddDays(-1);
+                //}
 
-                amount -= (int)(item.Sum * 10);
-                results.Add((date, amount));
-                date = date.AddDays(-1);
+                amount -= (int)(item.Sum * 100);
+                results.Add((DateTime.Parse(item.Key), amount));
+                //date = date.AddDays(-1);
             }
 
-            return results;
+            //results = results.GroupBy(x => new DateTime(x.Item1.Year, x.Item1.Month, 1)).Select(x => (x.Key, x.Sum(y => y.Item2))).ToList();
+            
+
+            return new
+            {
+                Data = results.Select(x => ((double)x.Item2) / 100).Reverse().ToArray(),
+                Labels = results.Select(x => x.Item1.ToString("yyyy-MM-dd")).Reverse().ToArray()
+            };
         }
 
     }

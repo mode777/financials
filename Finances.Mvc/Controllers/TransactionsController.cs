@@ -31,9 +31,9 @@ namespace Finances.Mvc.Controllers
         {
             var id = await GetConnectionId();
 
-            await banking.UpdateAsync(id);
+            var res = await banking.UpdateAsync(id);
 
-            return new TransactionResult(id, null);
+            return new TransactionResult(id, res);
         }
 
         public class CompleteParams
@@ -45,9 +45,9 @@ namespace Finances.Mvc.Controllers
         [HttpPost("complete")]
         public async Task<TransactionResult> Complete([FromBody]CompleteParams param)
         {
-            await banking.CompleteTransactionAsync(param.ConnectionId, param.Tan);
+            var res = await banking.CompleteTransactionAsync(param.ConnectionId, param.Tan);
 
-            return new TransactionResult(param.ConnectionId, null);
+            return new TransactionResult(param.ConnectionId, res);
         }
 
         private async Task<int> GetConnectionId()

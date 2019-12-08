@@ -1,4 +1,5 @@
-﻿@model IEnumerable<Finances.Mvc.Data.AccountItem>
+﻿@using Finances.Mvc.Controllers
+@model IEnumerable<Finances.Mvc.Data.AccountItem>
 
 @{
     ViewData["Title"] = "Konto";
@@ -40,7 +41,7 @@
     <script>
         $(document).ready(function () {
 
-            bindTransaction($('#btn-sync'), URL_SYNC);
+            bindTransaction($('#btn-sync'));
 
             $('#example').DataTable({
                 ajax: {
@@ -57,20 +58,18 @@
                 ]
             } );
         });
-
-        const URL_SYNC = "@Url.Action("Sync", "Transactions")";
-    
-        async function bindTransaction(btn, url) {
+            
+        async function bindTransaction(btn) {
             btn.click(async e => {
                 btn.attr('disabled', true);
-                const response = await fetch(url, {
+                const response = await fetch('@Url.Action(nameof(TransactionsController.Sync), "Transactions")', {
                     method: "POST",
                     credentials: "include"
                 });
                 let transaction = await response.json();
                 while (transaction.status === 'tan_required') {
                     const tan = prompt("Please enter TAN:");
-                    const response = await fetch(url, {
+                    const response = await fetch('@Url.Action(nameof(TransactionsController.Complete), "Transactions")', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {

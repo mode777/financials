@@ -16,16 +16,51 @@
 
             console.log(data);
 
-            //var myDoughnutChart = new Chart('myChart', {
-            //    type: 'doughnut',
-            //    data: {
-            //        datasets: [{
-            //            data: data.data
-            //        }],
-            //        // These labels appear in the legend and in the tooltips when hovering different arcs
-            //        labels: data.labels
-            //    },
-            //});
+            var myLineChart = new Chart('myChart', {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'My First dataset',
+                        //backgroundColor: window.chartColors.red,
+                        //borderColor: window.chartColors.red,
+                        data: data.data,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'Balance over Time'
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }                        
+                        },
+                        y: {
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Balance'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         });
     </script>
 }
